@@ -11,11 +11,10 @@ def load_tweets(path):
     # Creates a list of tweets where each tweet is a dictionary of its text
     # hashtags and id
     tweets = []
-    for i in len(data['tweets']):
-        tweet = data['tweets'][i]
+    for index, tweet in enumerate(data['tweets']):
         tweets.append({})
-        tweets[i]['text'] = tweet['extended_tweet']['full_text']
-        tweets[i]['hashtags'] = [hashtag['text'] for hashtag in tweet['extended_tweet']['entities']['hashtags']]
-        tweets[i]['id'] = int(tweet['id_str'])
+        tweets[index]['text'] = tweet['extended_tweet']['full_text']
+        tweets[index]['hashtags'] = [hashtag['text'] for hashtag in tweet['extended_tweet']['entities']['hashtags']]
+        tweets[index]['id'] = int(tweet['id_str'])
 
     return tweets
