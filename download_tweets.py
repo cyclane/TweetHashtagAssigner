@@ -9,7 +9,6 @@ except:
 
 try:
     import nltk
-    nltk.download("words")
 except:
     print("This script requires the \"nltk\" package!")
 
@@ -68,12 +67,14 @@ def remove_repeated_tweets(tweets):
 
 
 parser = argparse.ArgumentParser()
+parser.add_argument("--output","-o",help="Name of output file (JSON)",default="tweets.json")
 parser.add_argument("--key","-k",help="Consumer API Key",required=True)
 parser.add_argument("--secret","-s",help="Consumer API Secret",required=True)
-parser.add_argument("--output","-o",help="Name of output file (JSON)",default="tweets.json")
 args = parser.parse_args()
 
 if __name__ == "__main__":
+    nltk.download("words")
+
     try:
         bearer_token = BearerTokenAuth(args.key, args.secret)
         print("Twitter successfully authorised!")
