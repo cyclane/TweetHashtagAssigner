@@ -7,8 +7,12 @@ from nltk.stem import wordnet as wn
 
 # Load data somewhere and get unique word count
 unique_word_count = 1
-# List of all possible hashtags
-list_of_hashtags = []
+# List of all possible hashtags and frequency
+list_of_hashtags = {}
+# Hashtags bag of words
+bags_of_words = {}
+# Number of tweets in training data
+tweet_num = 1
 
 # Turns text into a list of lemmatized, important words
 def process_text(text):
@@ -57,7 +61,6 @@ def bayes_model(hashtag, tweet):
 # Finds the probability of a word given a hashtag with laplace smoothing
 def word_probability(word, hashtag):
     probability = 1
-    # Lemmatize word
     # Go through words in data and find their lemmatized similarity to word
     # Multiply similarity by the words count in the given hashtag category
     # Add to probability
