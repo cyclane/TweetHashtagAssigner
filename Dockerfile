@@ -1,4 +1,4 @@
-FROM tiangolo/uwsgi-nginx-flask:python3.6
+FROM tiangolo/uwsgi-nginx-flask:latest
 
 ENV STATIC_PATH /app/website
 ENV STATIC_INDEX 1
