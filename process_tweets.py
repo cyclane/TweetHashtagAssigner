@@ -89,7 +89,7 @@ def word_probability(word, tag, hashtag):
                 if len(training_synset) != 0:
                     similarity = wn.path_similarity(word_synset[0], training_synset[0])
                     if similarity is not None:
-                        wordcount += similarity
+                        wordcount += similarity*similarity
 
     # Add to probability
     probability += wordcount
@@ -112,4 +112,15 @@ def hashtag_probability(hashtag, id):
     probability /= len(hashtag_frequency)
     return probability
 
-print(hashtag_assigner({'text':'The panda and penguin.', 'id':1}))
+def best_predict(probabilites):
+    best_probability = 0
+    hashtag_predicted = ""
+    for hashtag in probabilites:
+        if probabilites[hashtag] > best_probability:
+            best_probability = probabilites[hashtag]
+            hashtag_predicted = hashtag
+    return hashtag_predicted
+
+probs = hashtag_assigner({'text':input(), 'id':1})
+print(probs)
+print(best_predict(probs))
