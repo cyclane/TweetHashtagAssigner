@@ -6,7 +6,6 @@ ENV STATIC_INDEX 1
 WORKDIR /
 
 RUN apt update && \
-    apt upgrade -y && \
     apt install ca-certificates -y && \
     rm -rf /app && \
     git clone https://github.com/Gleb-ko/TweetHashtagAssigner.git /app
