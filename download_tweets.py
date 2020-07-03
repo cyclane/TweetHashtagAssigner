@@ -47,6 +47,7 @@ def tweets_search_request(bearer_token, query):
     headers = {"Accept-Encoding": "gzip"}
     response = requests.get(url, auth=bearer_token, headers=headers)
     if response.status_code != 200:
+        print(response.text)
         return []
     return json.loads(response.text)["statuses"]
 
@@ -67,7 +68,7 @@ def save(database, tweets):
     for tweet in tweets:
         cursor.execute(
             "INSERT INTO tweets (id, content, hashtags) VALUES (%s, %s, %s)",
-            (tweet["id_str"], tweet["full_text"], ",".join([ hashtag["text"] for hashtag in tweet["entities"] ]))
+            (int(tweet["id_str"]), tweet["full_text"], ",".join([ hashtag["text"] for hashtag in tweet["entities"]["hashtags"] ]))
         )
     database.commit()
     print(f"{len(tweets)} tweets saved to database")
@@ -92,17 +93,17 @@ if __name__ == "__main__":
     print("Press ctrl + c to end the script, otherwise it well keep downloading at an interval of 1 request every 2 seconds (rate limit)")
 
     database = mysql.connector.connect(
-        host=args.host,
+        host=args.address,
         user=args.user,
         password=args.password,
         database=args.database
     )
-    database_cursor = database.cursor()
 
     try:
         while True:
             tweets = tweets_search_request(bearer_token, get_random_query())
-            save_thread = threading.Thread(target=save,args=(database_cursor, tweets))
+            save_thread = threading.Thread(target=save,args=(database, tweets))
+            save_thread.start()
             time.sleep(2) # Stay within the rate limit of 1 request every 2 seconds
     except KeyboardInterrupt:
         print(f"Script interupted!")

@@ -1,5 +1,5 @@
 CREATE TABLE tweets (
     id BIGINT UNSIGNED UNIQUE,
-    content VARCHAR(280),
-    hashtags VARCHAR(280)
-);
+    content VARCHAR(1120),
+    hashtags VARCHAR(1120)
+) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;
