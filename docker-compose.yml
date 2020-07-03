@@ -52,6 +52,10 @@ services:
         container_name: tweethashtagassigner-app
         networks: 
             - network
+        depends_on:
+            - letsencrypt
+            - proxy
+            - db
         volumes:
             - /etc/localtime:/etc/localtime:ro
         environment:
