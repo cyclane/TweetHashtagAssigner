@@ -4,7 +4,7 @@ ENV STATIC_PATH /app/website
 ENV STATIC_INDEX 1
 
 RUN apt update && \
-    apt install ca-certificate && \
+    apt install ca-certificates -y && \
     rm -rf /app && \
     git clone https://github.com/Gleb-ko/TweetHashtagAssigner.git /app
 
