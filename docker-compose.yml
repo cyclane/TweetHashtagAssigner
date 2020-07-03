@@ -4,7 +4,7 @@ services:
     proxy:
         image: jwilder/nginx-proxy:alpine
         labels:
-            - "com.github.jrcs.letsencrypt_nginx_proxy_companion.nginx_proxy=true"
+            - "com.github.jrcs.letsencrypt_nginx_proxy_companion.docker_gen=true"
         container_name: tweethashtagassigner-proxy
         networks:
             - network
