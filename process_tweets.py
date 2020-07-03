@@ -5,16 +5,19 @@ import nltk
 from nltk.tokenize import TweetTokenizer
 from nltk.corpus import wordnet as wn
 from nltk.stem.wordnet import WordNetLemmatizer
+import pickle
 
 # NOTE: I don't know how we're loading this stuff
 # Load data somewhere and get unique word count
-unique_word_count = 6
+
+data = pickle.load(open('model.pickle', 'rb'))
+unique_word_count = data['unique_word_count']
 # List of all possible hashtags and frequency
-hashtag_frequency = {'test':5, 'test2':2, 'test3':7}
+hashtag_frequency = data['hashtag_frequency']
 # Hashtags bag of words with pos tags
-bags_of_words = {'test':{('panda', wn.NOUN):2, ('cat', wn.NOUN):5}, 'test2':{('armadillo', wn.NOUN):1, ('penguin', wn.NOUN):2}, 'test3':{('go', wn.VERB):10}}
+bags_of_words = data['bags_of_words']
 # Number of tweets in training data
-tweet_num = 14
+tweet_num = data['tweet_num']
 
 # Turns text into a list of lemmatized, important words
 def process_text(text):
@@ -78,13 +81,15 @@ def word_probability(word, tag, hashtag):
     # Counts up how many of the word appear in the bag of words for the hashtag
     # Includes similar words as partial counts
     if tag != "":
-        word_synset = wn.synsets(word, pos=tag)[0]
-        for training_word, training_tag in hashtag_words:
-            # NOTE: This could be made more thourough at the cost of some performance in the future
-            training_synset = wn.synsets(training_word, pos=training_tag)[0]
-            similarity = wn.path_similarity(word_synset, training_synset)
-            if similarity is not None:
-                wordcount += similarity
+        word_synset = wn.synsets(word, pos=tag)
+        if len(word_synset) != 0:
+            for training_word, training_tag in hashtag_words:
+                # NOTE: This could be made more thourough at the cost of some performance in the future
+                training_synset = wn.synsets(training_word, pos=training_tag)
+                if len(training_synset) != 0:
+                    similarity = wn.path_similarity(word_synset[0], training_synset[0])
+                    if similarity is not None:
+                        wordcount += similarity
 
     # Add to probability
     probability += wordcount
