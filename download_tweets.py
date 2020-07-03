@@ -66,10 +66,11 @@ def remove_repeated_tweets(tweets):
 def save(database, tweets):
     cursor = database.cursor()
     for tweet in tweets:
-        cursor.execute(
-            "INSERT INTO tweets (id, content, hashtags) VALUES (%s, %s, %s)",
-            (int(tweet["id_str"]), tweet["full_text"], ",".join([ hashtag["text"] for hashtag in tweet["entities"]["hashtags"] ]))
-        )
+        if len(tweet["entities"]["hashtags"]) > 0:
+            cursor.execute(
+                "INSERT INTO tweets (id, content, hashtags) VALUES (%s, %s, %s)",
+                (int(tweet["id_str"]), tweet["full_text"], ",".join([ hashtag["text"] for hashtag in tweet["entities"]["hashtags"] ]))
+            )
     database.commit()
     print(f"{len(tweets)} tweets saved to database")
 
