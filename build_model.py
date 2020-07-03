@@ -3,7 +3,7 @@
 import nltk
 import pickle
 import mysql.connector
-from process_tweets import process_text
+import process_text
 
 # Load tweet database
 tweet_db = mysql.connector.connect(
