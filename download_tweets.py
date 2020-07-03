@@ -43,7 +43,7 @@ class BearerTokenAuth(AuthBase):
         return r
 
 def tweets_search_request(bearer_token, query):
-    url = f"https://api.twitter.com/1.1/search/tweets.json?q={urllib.parse.quote(query)}&count=100&tweet_mode=extended"
+    url = f"https://api.twitter.com/1.1/search/tweets.json?q={urllib.parse.quote(query)}&count=100&tweet_mode=extended&lang=en"
     headers = {"Accept-Encoding": "gzip"}
     response = requests.get(url, auth=bearer_token, headers=headers)
     if response.status_code != 200:
