@@ -73,9 +73,9 @@ def save(database, tweets):
     print(f"{len(tweets)} tweets saved to database")
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--host","-h",help="Hostname of output database",defautl="127.0.0.1")
-parser.add_argument("--database","-d",help="Name of database to use",default="tweets")
-parser.add_argument("--user","-u",help="Database user to login with",required=True)
+parser.add_argument("--host","-h",help="Hostname of output database",default="db")
+parser.add_argument("--database","-d",help="Name of database to use",default="TweetHashtagAssigner")
+parser.add_argument("--user","-u",help="Database user to login with",default="TweetHashtagAssigner")
 parser.add_argument("--password","-p",help="Database password for user",required=True)
 parser.add_argument("--key","-k",help="Consumer API Key",required=True)
 parser.add_argument("--secret","-s",help="Consumer API Secret",required=True)

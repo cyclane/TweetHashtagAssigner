@@ -1,0 +1,67 @@
+version: '3'
+
+services:
+    proxy:
+        image: jwilder/nginx-proxy:alpine
+        labels:
+            - "com.github.jrcs.letsencrypt_nginx_proxy_companion.nginx_proxy=true"
+        container_name: tweethashtagassigner-proxy
+        networks:
+            - network
+        ports:
+            - 11080:080
+            - 11443:443
+        volumes:
+            - ./proxy/conf.d:/etc/nginx/conf.d:rw
+            - ./proxy/vhost.d:/etc/nginx/vhost.d:rw
+            - ./proxy/html:/usr/share/nginx/html:rw
+            - ./proxy/certs:/etc/nginx/certs:ro
+            - /etc/localtime:/etc/localtime:ro
+            - /var/run/docker.sock:/tmp/docker.sock:ro
+        restart: unless-stopped
+    letsencrypt:
+        image: jrcs/letsencrypt-nginx-proxy-companion
+        container_name: tweethashtagassigner-letsencrypt
+        depends_on:
+            - proxy
+        networks:
+            - network
+        volumes:
+            - ./proxy/certs:/etc/nginx/certs:rw
+            - ./proxy/vhost.d:/etc/nginx/vhost.d:rw
+            - ./proxy/html:/usr/share/nginx/html:rw
+            - /etc/localtime:/etc/localtime:ro
+            - /var/run/docker.sock:/var/run/docker.sock:ro
+        restart: unless-stopped
+    db:
+        image: mariadb
+        container_name: tweethashtagassigner-mariadb
+        networks:
+            - network
+        volumes:
+            - db:/var/lib/mysql
+            - /etc/localtime:/etc/localtime:ro
+        environment:
+            - MYSQL_ROOT_PASSWORD=$MYSQL_ROOT_PASSWORD
+            - MYSQL_PASSWORD=$MYSQL_PASSWORD
+            - MYSQL_DATABASE=TweetHashtagAssigner
+            - MYSQL_USER=TweetHashtagAssigner
+        restart: unless-stopped
+    app:
+        build: .
+        container_name: tweethashtagassigner-app
+        networks: 
+            - network
+        volumes:
+            - /etc/localtime:/etc/localtime:ro
+        environment:
+            - VIRTUAL_HOST=tweethashtagassigner.eu.ngrok.io
+            - LETSENCRYPT_HOST=tweethashtagassigner.eu.ngrok.io
+            - LETSENCRYPT_EMAIL=gleb@koval.net
+        restart: unless-stopped
+
+volumes:
+    db:
+
+networks:
+    network:
