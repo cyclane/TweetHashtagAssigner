@@ -109,7 +109,7 @@ def hashtag_probability(hashtag, id):
     # Add number of tweets with hashtag in time frame to probability
     # Divide probability by total hashtags in tweets in time frame
     probability += hashtag_frequency[hashtag]
-    probability /= len(hashtag_frequency)
+    probability /= tweet_num
     return probability
 
 def best_predict(probabilites):
