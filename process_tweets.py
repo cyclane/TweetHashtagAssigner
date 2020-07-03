@@ -3,17 +3,18 @@
 
 import nltk
 from nltk.tokenize import TweetTokenizer
-from nltk.stem import wordnet as wn
+from nltk.corpus import wordnet as wn
+from nltk.stem.wordnet import WordNetLemmatizer
 
 # NOTE: I don't know how we're loading this stuff
 # Load data somewhere and get unique word count
-unique_word_count = 1
+unique_word_count = 6
 # List of all possible hashtags and frequency
-hashtag_frequency = {}
+hashtag_frequency = {'test':5, 'test2':2, 'test3':7}
 # Hashtags bag of words with pos tags
-bags_of_words = {}
+bags_of_words = {'test':{('panda', wn.NOUN):2, ('cat', wn.NOUN):5}, 'test2':{('armadillo', wn.NOUN):1, ('penguin', wn.NOUN):2}, 'test3':{('go', wn.VERB):10}}
 # Number of tweets in training data
-tweet_num = 1
+tweet_num = 14
 
 # Turns text into a list of lemmatized, important words
 def process_text(text):
@@ -23,7 +24,7 @@ def process_text(text):
     tokens = tokenizer.tokenize(text)
 
     # Lemmatize the words
-    lemmatizer = wn.WordNetLemmatizer()
+    lemmatizer = WordNetLemmatizer()
     simple_words = [lemmatizer.lemmatize(token) for token in tokens]
 
     # Tag simplified words with part of speech
@@ -36,13 +37,13 @@ def process_text(text):
     for word, tag in word_tags:
         if tag not in {'CC', 'DT', 'EX', 'IN', 'LS', 'MD', 'PDT', 'POS', 'PRP', 'PRP$', 'RP', 'TO', 'UH', 'WDT', 'WP', 'WP$', 'WRB'}:
             if tag[0] == 'N':
-                important_words.append((word, wordnet.NOUN))
+                important_words.append((word, wn.NOUN))
             elif tag[0] == 'V':
-                important_words.append((word, wordnet.VERB))
+                important_words.append((word, wn.VERB))
             elif tag[0] == 'J':
-                important_words.append((word, wordnet.ADJ))
+                important_words.append((word, wn.ADJ))
             elif tag[0] == 'R':
-                important_words.append((word, wordnet.ADV))
+                important_words.append((word, wn.ADV))
             else:
                 important_words.append((word, ""))
 
@@ -77,11 +78,13 @@ def word_probability(word, tag, hashtag):
     # Counts up how many of the word appear in the bag of words for the hashtag
     # Includes similar words as partial counts
     if tag != "":
-        word_synset = wn.sysnsets(word, pos=tag)[0]
+        word_synset = wn.synsets(word, pos=tag)[0]
         for training_word, training_tag in hashtag_words:
             # NOTE: This could be made more thourough at the cost of some performance in the future
             training_synset = wn.synsets(training_word, pos=training_tag)[0]
-            wordcount += wn.path_similarity(word_synset, training_synset)
+            similarity = wn.path_similarity(word_synset, training_synset)
+            if similarity is not None:
+                wordcount += similarity
 
     # Add to probability
     probability += wordcount
@@ -103,3 +106,5 @@ def hashtag_probability(hashtag, id):
     probability += hashtag_frequency[hashtag]
     probability /= len(hashtag_frequency)
     return probability
+
+print(hashtag_assigner({'text':'The panda and penguin.', 'id':1}))
