@@ -1,2 +1,2 @@
 git pull
-flask run
+sh /start.sh
