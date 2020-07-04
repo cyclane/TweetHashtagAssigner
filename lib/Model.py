@@ -3,7 +3,7 @@ from __future__ import annotations
 import mysql.connector
 import numpy
 
-from .utils import tag_to_int
+from .utils import tag_to_inttag, tokenize_tweet, tag_words, filter_important_words
 
 class Model:
     def __init__(self,
@@ -46,10 +46,32 @@ class Model:
         hashtags = []
         hashtag_frequencies = numpy.array([]) 
         words = []
-        word_tags = numpy.array([])
-        relations = numpy.array([])
 
+        # Get all words
+        tokenized_tweets = []
         for tweet in tweets:
+            tweet_words = tokenize_tweet(tweet[0])
+            for word in tweet_words:
+                if word not in words:
+                    words.append(word)
+            tokenized_tweets.append((tweet_words, tweet[1]))
+
+        # Tag and filter
+        word_tags = tag_words(*words)
+        words, word_tags = filter_important_words(words, word_tags)
+
+        word_tags = numpy.array(word_tags)
+
+        tokenized_tweets = [
+            (filter(lambda word : word in words, tweet_words), tweet[1])
+            for tweet in tokenized_tweets
+        ]
+
+        # Create relations with a dummy row (for concatenate to work)
+        relations = numpy.zeros((1,len(words)))
+
+        # createe hashtag, hashtag requency and relations data
+        for tweet in tokenized_tweets:
             tweet_words = tweet[0]
             tweet_hashtags = tweet[1].split(",")
             for hashtag in tweet_hashtags:
@@ -62,25 +84,16 @@ class Model:
                     ))
                     relations = numpy.concatenate((
                         relations,
-                        numpy.zeros((1,relations.shape[1]))
+                        numpy.zeros((1,len(words)))
                     ))
                 else:
                     hashtag_frequencies[hashtags.index(hashtag)] += 1
 
-                for word, tag in tweet_words:
-                    if word not in words:
-                        # Add word to list and change shapes of affected numpy arrays
-                        words.append(word)
-                        word_tags = numpy.concatenate((
-                            word_tags,
-                            (tag_to_int(tag),)
-                        ))
-                        relations = numpy.concatenate((
-                            relations,
-                            numpy.zeros((relations.shape[0],1))
-                        ), axis=1)
-                    relations[hashtags.index(hashtag)][words.index(word)] += 1
-        
+                for word in tweet_words:
+                    relations[hashtags.index(hashtag)+1][words.index(word)] += 1
+
+        relations = numpy.delete(relations, 0, axis=0)
+
         return Model(
             tweet_count=tweet_count,
             hashtags=hashtags,

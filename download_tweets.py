@@ -1,6 +1,6 @@
 # Downloads tweets and puts them in format to go to process_tweets.py
 
-import sys, argparse, json, random, urllib.parse, time, copy, threading
+import sys, argparse, json, random, urllib.parse, time, copy, threading, string
 try:
     import requests
     from requests.auth import AuthBase
@@ -42,6 +42,12 @@ class BearerTokenAuth(AuthBase):
         r.headers['User-Agent'] = 'LabsResearchSearchQuickStartPython'
         return r
 
+class Counter:
+    def __init__(self):
+        self.value = 0
+    def add(self, value):
+        self.value += value
+
 def tweets_search_request(bearer_token, query):
     url = f"https://api.twitter.com/1.1/search/tweets.json?q={urllib.parse.quote(query)}&count=100&tweet_mode=extended&lang=en"
     headers = {"Accept-Encoding": "gzip"}
@@ -52,7 +58,17 @@ def tweets_search_request(bearer_token, query):
     return json.loads(response.text)["statuses"]
 
 def get_random_query():
-    return random.choice(nltk.corpus.words.words())
+    """
+    query_words = []
+    while len(query_words)+8*(len(query_words)-1) < 300:
+        word = ""
+        while word in query_words or word == "":
+            word = random.choice(nltk.corpus.words.words()).lower()
+        query_words.append(word)
+    query_words.pop(-1)
+    return " OR ".join(query_words)
+    """
+    return "\"{}\"".format(random.choice(list(string.ascii_lowercase)))
 
 def remove_repeated_tweets(tweets):
     exists = []
@@ -63,16 +79,20 @@ def remove_repeated_tweets(tweets):
             non_repeated_tweets.append(tweet)
     return non_repeated_tweets
 
-def save(database, tweets):
+def save(database, tweets, counter=None):
     cursor = database.cursor()
+    count = 0
     for tweet in tweets:
         if len(tweet["entities"]["hashtags"]) > 0:
+            count += 1
             cursor.execute(
-                "INSERT INTO tweets (id, content, hashtags) VALUES (%s, %s, %s)",
-                (int(tweet["id_str"]), tweet["full_text"], ",".join([ hashtag["text"] for hashtag in tweet["entities"]["hashtags"] ]))
+                "INSERT INTO tweets (id, content, hashtags) VALUES (%s, %s, %s) ON DUPLICATE KEY UPDATE id=%s",
+                (int(tweet["id_str"]), tweet["full_text"], ",".join([ hashtag["text"] for hashtag in tweet["entities"]["hashtags"] ]), int(tweet["id_str"]))
             )
     database.commit()
-    print(f"{len(tweets)} tweets saved to database")
+    print(f"{count} tweets saved to database")
+    if counter:
+        counter.add(count)
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--address","-a",help="Hostname of output database",default="db")
@@ -100,14 +120,16 @@ if __name__ == "__main__":
         database=args.database
     )
 
+    counter = Counter()
+
     try:
         while True:
             tweets = tweets_search_request(bearer_token, get_random_query())
-            save_thread = threading.Thread(target=save,args=(database, tweets))
+            save_thread = threading.Thread(target=save,args=(database, tweets, counter))
             save_thread.start()
             time.sleep(2) # Stay within the rate limit of 1 request every 2 seconds
     except KeyboardInterrupt:
         print(f"Script interupted!")
     except Exception as e:
         print(f"Script errored!\n\n{e}")
-
+    print("Total tweets saved to database (there may be some error due to duplicate tweets):",counter.value)
