@@ -1,9 +1,9 @@
-from typing import Any, List, Tuple
+from typing import Any, List, Dict, Tuple
 from nltk import pos_tag
 from nltk.corpus import wordnet as wn
 from nltk.tokenize import TweetTokenizer
 from nltk.stem.wordnet import WordNetLemmatizer
-import mysql.connector
+import mysql.connector, sys, numpy
 
 
 def tag_to_inttag(tag: Any) -> int:
@@ -109,7 +109,7 @@ def tag_words(*words: List[str]) -> List[int]:
 
     return tags
 
-def filter_important_words(words: List[str], tags: List[int]) -> Tuple[List[str], List[int]]:
+def filter_important_words(words: List[str], tags: List[int]) -> Tuple[Dict[str, int], List[int]]:
     """Filter out unimportant words
     Unimportant words are ones with a tag of None
 
@@ -118,14 +118,14 @@ def filter_important_words(words: List[str], tags: List[int]) -> Tuple[List[str]
         tags (List[int]): The list of tags of the words
 
     Returns:
-        Tuple[List[str], List[int]]: A tuple of the filtered list of (words, tags)
+        Tuple[Dict[str, int], List[int]]: A tuple of the filtered list of (words, tags)
     """
-    filtered_words = []
+    filtered_words = {}
     filtered_tags = []
     
     for word, tag in zip(words, tags):
         if tag != None:
-            filtered_words.append(word)
+            filtered_words[word] = len(filtered_words)
             filtered_tags.append(tag)
     
     return (filtered_words, filtered_tags)
@@ -141,4 +141,27 @@ def load_tweets(database: mysql.connector.MySQLConnection) -> List[Tuple[str,str
     """
     cursor = database.cursor()
     cursor.execute("SELECT content, hashtags FROM tweets")
-    return cursor.fetchall()
+    tweets = cursor.fetchall()
+    cursor.close()
+    return tweets
+
+def draw_progress_bar(percentage, width=20):
+    sys.stdout.write("\r")
+    sys.stdout.write("[{:<{}}] {:.0f}%".format("=" * int(width * percentage), width, percentage * 100))
+    sys.stdout.flush()
+
+def sort_probabilities(probabilities: numpy.ndarray) -> numpy.ndarray:
+    """Sort a list of probabilities
+
+    Args:
+        probabilities (numpy.ndarray): List of probabilities (shape is (n,))
+
+    Returns:
+        numpy.ndarray: The list of probabilities sorted by highest probability (shape is (n,2))
+    """
+    sorted_probabilities = numpy.vstack((
+        numpy.arange(len(probabilities)),
+        probabilities
+    )).T # Transpose is required to make it a horizontal stack instead of vertical stack
+    sorted_probabilities = sorted_probabilities[sorted_probabilities[:,1].argsort()] # Sorts the new array by the second column (which contains the probability)
+    return sorted_probabilities

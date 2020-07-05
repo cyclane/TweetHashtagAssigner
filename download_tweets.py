@@ -121,15 +121,19 @@ if __name__ == "__main__":
     )
 
     counter = Counter()
+    iterations = 0
 
     try:
         while True:
             tweets = tweets_search_request(bearer_token, get_random_query())
             save_thread = threading.Thread(target=save,args=(database, tweets, counter))
             save_thread.start()
+            iterations += 1
             time.sleep(2) # Stay within the rate limit of 1 request every 2 seconds
     except KeyboardInterrupt:
         print(f"Script interupted!")
     except Exception as e:
         print(f"Script errored!\n\n{e}")
     print("Total tweets saved to database (there may be some error due to duplicate tweets):",counter.value)
+    print("Total requests:",iterations)
+    print("Tweets per request average:",counter.value/iterations)
