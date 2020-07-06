@@ -84,7 +84,7 @@ if __name__ == "__main__":
     )
 
     counter = Counter()
-    streamListener = StreamListener(counter, database.cursor())
+    streamListener = StreamListener(database.cursor())
     start = time.time()
 
     try:
