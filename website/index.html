@@ -1,13 +1,15 @@
 <!DOCTYPE html>
 <html>
     <head>
+    	<script src="assigner.js" type="text/javascript"></script>
     	<link href="style.css" rel ="stylesheet" type ="text/css"/>
         <title>Hashtag Assigner</title>
     </head>
     <body>
         <h1>Hashtag Assigner</h1>
         <h2>Put your tweet in the box below and the Hashtag Assigner will assign hashtags.</h2>
-        <textarea style="resize: none;" placeholder="Your tweet here" rows="7" cols="41" maxlength="280"></textarea>
+        <textarea id = "tweet" style="resize: none;" placeholder="Your tweet here" rows="7" cols="41" maxlength="280"></textarea>
+        <button onclick="getHashtags()">Get Hashtags</button>
         <ol id="hashtags"> Hashtags
   			<li></li>
   			<li></li>
