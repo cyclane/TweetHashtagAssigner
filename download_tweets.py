@@ -91,8 +91,12 @@ if __name__ == "__main__":
         stream = tweepy.Stream(auth=api.auth, listener=streamListener,tweet_mode="extended")
         stream.filter(
             track=["the","of","to","and","a","in","is","it","you","that","he","was","for","on","are","with","as","I","his","they","be","at","one","have","this","from","or"],
-            languages=["en"]
+            languages=["en"],
+            is_async=True
         )
+        while True:
+            database.commit()
+            time.sleep(1)
     except KeyboardInterrupt:
         print(f"\nScript interupted!")
     except Exception as e:
