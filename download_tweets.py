@@ -27,10 +27,11 @@ class Counter:
         self.value += value
 
 class StreamListener(tweepy.StreamListener):
-    def __init__(self, cursor):
+    def __init__(self, cursor, logging):
         super().__init__()
         self.count = 0
         self.cursor = cursor
+        self.logging = logging
 
     def on_status(self, status):
         text = status.text
@@ -51,9 +52,10 @@ class StreamListener(tweepy.StreamListener):
                     for hashtag in entities["hashtags"]
                 ]
             )
-            sys.stdout.write("\r")
-            sys.stdout.write(f"{self.count} Tweets saved")
-            sys.stdout.flush()
+            if self.logging:
+                sys.stdout.write("\r")
+                sys.stdout.write(f"{self.count} Tweets saved")
+                sys.stdout.flush()
 
     def on_error(self, status_code):
         print(f"! Encountered streaming error ({status_code})")
@@ -67,6 +69,7 @@ parser.add_argument("--key","-k",help="Consumer API Key",required=True)
 parser.add_argument("--secret","-s",help="Consumer API Secret",required=True)
 parser.add_argument("--token","-t",help="User API token",required=True)
 parser.add_argument("--token_secret","-ts",help="User API token secret",required=True)
+parser.add_argument("--logging","-l",help="Log actions",action="store_true")
 args = parser.parse_args()
 
 
@@ -76,7 +79,8 @@ if __name__ == "__main__":
     auth.set_access_token(args.token, args.token_secret)
     api = tweepy.API(auth)
 
-    print("Press ctrl + c to end the script, otherwise it well keep downloading at an interval of 1 request every 2 seconds (rate limit)")
+    if args.logging:
+        print("Press ctrl + c to end the script, otherwise it well keep downloading at an interval of 1 request every 2 seconds (rate limit)")
 
     database = mysql.connector.connect(
         host=args.address,
@@ -86,7 +90,7 @@ if __name__ == "__main__":
     )
 
     counter = Counter()
-    streamListener = StreamListener(database.cursor())
+    streamListener = StreamListener(database.cursor(),logging=args.logging)
     start = time.time()
 
     try:
@@ -96,11 +100,12 @@ if __name__ == "__main__":
             languages=["en"]
         )
     except KeyboardInterrupt:
-        print(f"\nScript interupted!")
+        if args.logging: print(f"\nScript interupted!")
     except Exception as e:
-        print(f"\nScript errored!\n\n{e}")
+        if args.logging: print(f"\nScript errored!\n\n{e}")
     end = time.time()
     database.commit()
 
-    print("Total time (s):",end-start)
-    print("Valid tweets per second:",streamListener.count/(end-start))
+    if args.logging:
+        print("Total time (s):",end-start)
+        print("Valid tweets per second:",streamListener.count/(end-start))
