@@ -230,7 +230,7 @@ class Model(BaseModel):
         if logging: print("Tagging words")
         word_tags = tag_words(words)
         words, word_tags = filter_important_words(words, word_tags) # Here the words list is also converted in a dictionary which is much faster
-        word_tags = numpy.array(word_tags, dtype=numpy.int16)
+        word_tags = numpy.array(word_tags, dtype=numpy.int32)
         tokenized_tweets = [
             (filter(lambda word : word in words, tweet_words), tweet[1])
             for tweet in tokenized_tweets
@@ -350,12 +350,12 @@ class Model(BaseModel):
         hashtags = {}
         for hashtag in hashtags_data:
             hashtags[hashtag[1]] = len(hashtags)
-        hashtag_frequencies = numpy.array([ hashtag[2] for hashtag in hashtags_data ])
+        hashtag_frequencies = numpy.array([ hashtag[2] for hashtag in hashtags_data ], dtype=numpy.int32)
         
         words = {}
         for word in words_data:
             words[word[1]] = len(words)
-        word_tags = numpy.array([ word[2] for word in words_data ], dtype=numpy.int16)
+        word_tags = numpy.array([ word[2] for word in words_data ], dtype=numpy.int32)
 
         relations = numpy.zeros((len(hashtags),len(words)), dtype=numpy.int32)
         for hashtag_id, word_id, frequency in relations_data:
@@ -436,7 +436,7 @@ class Model(BaseModel):
                 f"""
                 INSERT INTO hashtags_{model_id} (hashtag, frequency) VALUES (%s, %s)
                 """,
-                (hashtag, self.hashtag_frequencies[index])
+                (hashtag, int(self.hashtag_frequencies[index]))
             )
         database.commit()
 
@@ -457,7 +457,7 @@ class Model(BaseModel):
                     f"""
                     INSERT INTO relations_{model_id} (hashtag_id, word_id, frequency) VALUES (%s, %s, %s)
                     """,
-                    (hashtag_id, word_id, frequency)
+                    (hashtag_id, word_id, int(frequency))
                 )
         database.commit()
 
