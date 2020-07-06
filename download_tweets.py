@@ -5,10 +5,12 @@ try:
     import tweepy
 except:
     print("This script requires the \"tweepy\" package!")
+    exit()
 try:
     import mysql.connector
 except:
     print("This script requires the \"mysql-connector-python\" package!")
+    exit()
 
 tweet_count = 0
 
