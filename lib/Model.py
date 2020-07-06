@@ -48,6 +48,16 @@ class BaseModel:
     def words(self):
         return self._words_array
 
+    @property
+    def word_count(self) -> int:
+        """Get the unique word count of the model
+
+        Returns:
+            int: The unique word count
+        """
+        return len(self._words)
+
+
     def get_hashtag_string(self, hashtag_id: int) -> str:
         """Get a hashtag's string value from its ID
 
@@ -362,15 +372,6 @@ class Model(BaseModel):
             relations=relations,
             model_id=model_id
         )
-
-    @property
-    def word_count(self) -> int:
-        """Get the unique word count of the model
-
-        Returns:
-            int: The unique word count
-        """
-        return len(self._words)
 
     def save(self, database: mysql.connector.MySQLConnection, model_id: int = None) -> int:
         """Save the model to a MySQL databse
