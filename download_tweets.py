@@ -39,7 +39,7 @@ class StreamListener(tweepy.StreamListener):
             entities = status.extended_tweet["entities"]
         
         if len(entities["hashtags"]) > 0:
-            self.coun += 1
+            self.count += 1
             save(
                 self.cursor,
                 status.id,
@@ -50,7 +50,7 @@ class StreamListener(tweepy.StreamListener):
                 ]
             )
             sys.stdout.write("\r")
-            sys.stdout.write(f"{self.counter.value} Tweets saved")
+            sys.stdout.write(f"{self.count} Tweets saved")
             sys.stdout.flush()
 
     def on_error(self, status_code):
