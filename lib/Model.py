@@ -91,7 +91,7 @@ class BaseModel:
         """
         tokenized_tweet = tokenize_tweet(string)
         word_tags = tag_words(tokenized_tweet)
-        words_and_tags = zip(*filter_important_words(tokenized_tweet, word_tags))
+        words_and_tags = list(zip(*filter_important_words(tokenized_tweet, word_tags)))
 
         hashtag_probabilities = numpy.zeros(len(self.hashtags))
         
