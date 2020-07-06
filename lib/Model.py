@@ -1,6 +1,6 @@
 from __future__ import annotations
 from typing import List, Dict, Tuple
-import mysql.connector, numpy
+import mysql.connector, numpy, time
 
 from nltk.corpus import wordnet
 
@@ -80,7 +80,7 @@ class BaseModel:
             numpy.ndarray: List of relative probabilities with the index of the hashtag ID
         """
         tokenized_tweet = tokenize_tweet(string)
-        word_tags = tag_words(*tokenized_tweet)
+        word_tags = tag_words(tokenized_tweet)
         words_and_tags = zip(*filter_important_words(tokenized_tweet, word_tags))
 
         hashtag_probabilities = numpy.zeros(len(self.hashtags))
@@ -195,57 +195,89 @@ class Model(BaseModel):
             Model: The model object
         """
         tweet_count = len(tweets)
-        hashtags = []
-        words = []
+        hashtags = {}
+        hashtag_frequencies = []
+        words = {}
 
         tokenized_tweets = []
         numerized_tweets = [] # hashtag and word strings are converted into int
 
         # Get all words
+        start = time.time()
         if logging: print("Retreiving words")
         for tweet in tweets:
             tweet_words = tokenize_tweet(tweet[0])
             for word in tweet_words:
-                if word not in words:
-                    words.append(word)
+                try:
+                    words[word]
+                except KeyError:
+                    words[word] = len(words)
             tokenized_tweets.append([tweet_words, tweet[1].split(",")])
+        if logging: print(time.time()-start)
 
         # Tag and filter
+        start = time.time()
         if logging: print("Tagging words")
-        word_tags = tag_words(*words)
+        word_tags = tag_words(words)
         words, word_tags = filter_important_words(words, word_tags) # Here the words list is also converted in a dictionary which is much faster
         word_tags = numpy.array(word_tags, dtype=numpy.int16)
         tokenized_tweets = [
             (filter(lambda word : word in words, tweet_words), tweet[1])
             for tweet in tokenized_tweets
         ]
+        if logging: print(time.time()-start)
 
         # Create hashtag data
+        start = time.time()
+        if logging: print("Creating hashtag data")
+        for index, (_, tweet_hashtags) in enumerate(tokenized_tweets):
+            for hashtag in tweet_hashtags:
+                try:
+                    hashtag_frequencies[hashtags[hashtag]] += 1
+                except KeyError:
+                    hashtags[hashtag] = len(hashtags)
+                    hashtag_frequencies.append(1)
+        hashtag_frequencies = numpy.array(hashtag_frequencies, dtype=numpy.int32)
+        if logging: print(time.time()-start)
+
+        """
+        # Create hashtag data
+        start = time.time()
         if logging: print("Creating hashtag data")
         unique_hashtags = {}
         for index, (_, tweet_hashtags) in enumerate(tokenized_tweets):
             for hashtag in tweet_hashtags:
                 hashtags.append(hashtag)
-                if hashtag not in unique_hashtags:
+                try:
+                    unique_hashtags[hashtag]
+                except KeyError:
                     unique_hashtags[hashtag] = len(unique_hashtags)
+        if logging: print(time.time()-start)
 
         # Create hashtag frequency data
+        start = time.time()
         if logging: print("Creating hashtag frequency data")
         hashtag_frequencies = numpy.zeros(len(unique_hashtags))
         for index, hashtag in enumerate(unique_hashtags):
             hashtag_frequencies[index] = hashtags.count(hashtag)
         hashtags = unique_hashtags
+        if logging: print(time.time()-start)
+        """
 
         # Modify tokenized_tweets
+        start = time.time()
+        if logging: print("Creating numerized tweets")
         numerized_tweets = [
             [[ words[word] for word in tweet[0] ],
             [ hashtags[hashtag] for hashtag in tweet[1] ]]
             for tweet in tokenized_tweets
         ]
+        if logging: print(time.time()-start)
 
         # Create relations data
+        start = time.time()
         if logging: print("Creating relations data")
-        relations = numpy.zeros((len(unique_hashtags),len(words)), dtype=numpy.int32)
+        relations = numpy.zeros((len(hashtags),len(words)), dtype=numpy.int32)
         for index in range(len(numerized_tweets)):
             for word_index in range(len(numerized_tweets[index][0])):
                 for hashtag_index in range(len(numerized_tweets[index][1])):
@@ -254,11 +286,12 @@ class Model(BaseModel):
                     ][
                         numerized_tweets[index][0][word_index]
                     ] += 1
+        if logging: print(time.time()-start)
 
         if logging: print("Model built!")
         return Model(
             tweet_count=tweet_count,
-            hashtags=unique_hashtags,
+            hashtags=hashtags,
             hashtag_frequencies=hashtag_frequencies,
             words=words,
             word_tags=word_tags,

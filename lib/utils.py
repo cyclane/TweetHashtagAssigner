@@ -84,13 +84,16 @@ def tokenize_tweet(tweet: str) -> List[str]:
     tokens = tokenizer.tokenize(tweet)
 
     # Lemmatize the words
-    lemmatizer = WordNetLemmatizer()
-    simple_words = [lemmatizer.lemmatize(token) for token in tokens]
+    #lemmatizer = WordNetLemmatizer()
+    #simple_words = [lemmatizer.lemmatize(token) for token in tokens]
 
-    return simple_words
+    return tokens
 
-def tag_words(*words: List[str]) -> List[int]:
+def tag_words(words: List[str]) -> List[int]:
     """Tag words by part of speech
+
+    Args:
+        words (List[str]): A list of words to tag
 
     Returns:
         List[int]: A list of integer tags (or None if not tag was assigned)
