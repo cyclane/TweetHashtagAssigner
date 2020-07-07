@@ -6,21 +6,27 @@
         <title>Hashtag Assigner</title>
     </head>
     <body>
-        <h1>Hashtag Assigner</h1>
-        <h2>Put your tweet in the box below and the Hashtag Assigner will assign hashtags.</h2>
+    	<ul>
+    		<li class = "navBar"><a>Hashtag Assigner</a></li>
+    		<li class = "navBar"><a>About</a></li>
+    		<li class = "navBar"><a>Twitter</a></li>
+    	</ul>
+        <h2>Put your tweet here and get ten relevant hashtags!</h2>
         <textarea id = "tweet" style="resize: none;" placeholder="Your tweet here" rows="7" cols="41" maxlength="280"></textarea>
-        <button onclick="getHashtags()">Get Hashtags</button>
-        <ol id="hashtags"> Hashtags
-  			<li></li>
-  			<li></li>
-  			<li></li>
-  			<li></li>
- 			<li></li>
-  			<li></li>
- 		 	<li></li>
-  			<li></li>
-  			<li></li>
- 	 		<li></li>
+        <div>
+        	<button class = "aquire" onclick="getHashtags()">Get Hashtags</button>
+        </div>
+        <ol class = "listOrder" d="hashtags"> Hashtags
+  			<li class="hashtag"></li>
+  			<li class="hashtag"></li>
+  			<li class="hashtag"></li>
+  			<li class="hashtag"></li>
+ 			<li class="hashtag"></li>
+  			<li class="hashtag"></li>
+ 		 	<li class="hashtag"></li>
+  			<li class="hashtag"></li>
+  			<li class="hashtag"></li>
+ 	 		<li class="hashtag"></li>
 		</ol>
     </body>
 </html>
