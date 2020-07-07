@@ -1,8 +1,45 @@
-li {
-	font-family: 'Helvetica Neue', Helvetica;
-}
 h2{
 	font-family: 'Helvetica Neue', Helvetica;
 	font-size: 20px;
-	color: rgb(25, 25, 255);
+	color: rgb(0, 140, 225);
+}
+ul{
+	list-style-type: none;
+	overflow: hidden;
+	background-color: rgb(0,0,0);
+}
+
+.listOrder{
+	padding-left: 100px; 
+	font-family: 'Helvetica Neue', Helvetica;
+	font-size: 30px;
+	color: rgb(0, 140, 225);
+}
+
+.hashtag {
+	font-family: 'Helvetica Neue', Helvetica;
+	font-size: 20px;
+}
+
+.navBar{
+	float: left;
+	font-family: 'Helvetica Neue', Helvetica;
+	font-size: 30px;
+}
+.navBar a{
+	display: block;
+	color: white;
+	text-align: center;
+	padding: 20px 20px;
+	text-decoration: none;
+}
+.navBar a:hover{
+	background-color: rgb(18,0,85);
+}
+
+.aquire{
+	font-size: 48px;
+	background-color: #00acee;
+	font-family: "Helvetica Neue", Helvetica;
+	color: white;
 }
