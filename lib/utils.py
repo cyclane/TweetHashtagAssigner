@@ -84,10 +84,10 @@ def tokenize_tweet(tweet: str) -> List[str]:
     tokens = tokenizer.tokenize(tweet)
 
     # Lemmatize the words
-    #lemmatizer = WordNetLemmatizer()
-    #simple_words = [lemmatizer.lemmatize(token) for token in tokens]
+    lemmatizer = WordNetLemmatizer()
+    simple_words = [lemmatizer.lemmatize(token) for token in tokens]
 
-    return tokens
+    return simple_words
 
 def tag_words(words: List[str]) -> List[int]:
     """Tag words by part of speech
@@ -167,4 +167,4 @@ def sort_probabilities(probabilities: numpy.ndarray) -> numpy.ndarray:
         probabilities
     )).T # Transpose is required to make it a horizontal stack instead of vertical stack
     sorted_probabilities = sorted_probabilities[sorted_probabilities[:,1].argsort()] # Sorts the new array by the second column (which contains the probability)
-    return sorted_probabilities
+    return sorted_probabilities[::-1]

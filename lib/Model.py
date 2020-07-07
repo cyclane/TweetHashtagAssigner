@@ -89,7 +89,7 @@ class BaseModel:
         Returns:
             numpy.ndarray: List of relative probabilities with the index of the hashtag ID
         """
-        tokenized_tweet = tokenize_tweet(string)
+        tokenized_tweet = tokenize_tweet(string.lower())
         word_tags = tag_words(tokenized_tweet)
         words_and_tags = list(zip(*filter_important_words(tokenized_tweet, word_tags)))
 
@@ -216,7 +216,7 @@ class Model(BaseModel):
         start = time.time()
         if logging: print("Retreiving words")
         for tweet in tweets:
-            tweet_words = tokenize_tweet(tweet[0])
+            tweet_words = tokenize_tweet(tweet[0].lower())
             for word in tweet_words:
                 try:
                     words[word]
@@ -232,7 +232,7 @@ class Model(BaseModel):
         words, word_tags = filter_important_words(words, word_tags) # Here the words list is also converted in a dictionary which is much faster
         word_tags = numpy.array(word_tags, dtype=numpy.int32)
         tokenized_tweets = [
-            (filter(lambda word : word in words, tweet_words), tweet[1])
+            (list(filter(lambda word : word in words, tweet[0])), tweet[1])
             for tweet in tokenized_tweets
         ]
         if logging: print(time.time()-start)
