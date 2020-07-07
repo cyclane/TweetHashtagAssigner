@@ -5,7 +5,8 @@ import json, mysql.connector, nltk
 import lib
 
 nltk.download("wordnet")
-nltk.donwload("averaged_perceptron_tagger")
+nltk.download("averaged_perceptron_tagger")
+
 # Will change later so it's fine for it to be in repo
 database = mysql.connector.connect(
     host="db",
