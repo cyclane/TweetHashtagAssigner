@@ -100,7 +100,7 @@ class BaseModel:
             for word, inttag in words_and_tags:
                 text_hashtag_probability *= self.word_probability(word, inttag, hashtag)
             
-            hashtag_probability = self.hashtag_probability(hashtag)
+            hashtag_probability *= self.hashtag_probability(hashtag)
             hashtag_probabilities[self._hashtags[hashtag]] = text_hashtag_probability * hashtag_probability
 
         return hashtag_probabilities
