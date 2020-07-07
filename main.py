@@ -1,17 +1,33 @@
 # Flask web app
 
 from flask import Flask, request, abort
-import json
+import json, mysql.connector, nltk
+import lib
 
+nltk.download("wordnet")
+
+# Will change later so it's fine for it to be in repo
+database = mysql.connector.connect(
+    host="db",
+    user="TweetHashtagAssigner",
+    password="password",
+    database="TweetHashtagAssigner"
+)
 app = Flask(__name__)
+model = lib.Model.load(database,1)
 
 @app.route('/api/probability')
 def main():
+    global model
     text = request.args.get("text", default=None)
     if text:
-        # This is only for testing
+        prob = model.text_probability(text)
+        prob = lib.sort_probabilities(prob)
+        hashtags = []
+        for x in range(min(10,len(prob))):
+            hashtags.append(model.get_hashtag_string(prob[x][0]))
         return json.dumps({
-            "hashtags": [text, "a", "b", "c", "d", "e", "f", "g", "h", "i"]
+            "hashtags": hashtags
         })
     else:
         abort(404) 
