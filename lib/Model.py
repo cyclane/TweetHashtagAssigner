@@ -352,7 +352,7 @@ class Model(BaseModel):
         print("Relations table created")
         count = 0
         while True:
-            print(f"{count} relations rows loaded")
+            print(f"{count} relations rows loaded\nrelations size: {relations.nbytes}")
             rows = cursor.fetchmany(batch_size)
             if rows:
                 for hashtag_id, array_bytes in rows:
