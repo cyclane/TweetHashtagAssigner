@@ -368,10 +368,10 @@ class Model(BaseModel):
                     ),
                     (len(rows), num_words)
                 )
-                if relations != None:
-                    relations = numpy.vstack((relations, batch))
-                else:
+                if type(relations) == None.__class__:
                     relations = batch
+                else:
+                    relations = numpy.vstack((relations, batch))
                 count += len(rows)
             else:
                 break
