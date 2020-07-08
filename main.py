@@ -1,19 +1,19 @@
 # Flask web app
 
 from flask import Flask, request, abort
-import json, pymysql.cursors, nltk
+import json, mysql.connector, nltk
 import lib
 
 nltk.download("wordnet")
 nltk.download("averaged_perceptron_tagger")
 
 # Will change later so it's fine for it to be in repo
-database = pymysql.connect(
+database = mysql.connector.connect(
     host="db",
     user="TweetHashtagAssigner",
     password="password",
     database="TweetHashtagAssigner",
-    charset="utf8mb4"
+    use_pure=True
 )
 app = Flask(__name__)
 print("Loading model")
