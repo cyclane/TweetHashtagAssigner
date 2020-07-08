@@ -368,7 +368,7 @@ class Model(BaseModel):
             model_id=model_id
         )
 
-    def save(self, database: mysql.connector.MySQLConnection, model_id: int = None) -> int:
+    def save(self, database: mysql.connector.MySQLConnection, batch_size: int, model_id: int = None) -> int:
         """Save the model to a MySQL databse
 
         Args:
@@ -452,12 +452,21 @@ class Model(BaseModel):
         def _relations_iterator(relations):
             for hashtag_id in range(len(relations)):
                 yield (hashtag_id, relations[hashtag_id].tobytes())
-        cursor.executemany(
-            f"""
-            INSERT INTO relations_{model_id} (hashtag_id, words) VALUES (%s, %s)
-            """,
-            _relations_iterator(self.relations)
-        )
+        complete = False
+        generator = _relations_iterator(self.relations)
+        while not complete:
+            data = []
+            try:
+                for x in range(batch_size):
+                    data.append(next(generator))
+            except StopIteration:
+                complete = True
+            cursor.executemany(
+                f"""
+                INSERT INTO relations_{model_id} (hashtag_id, words) VALUES (%s, %s)
+                """,
+                data
+            )
         database.commit()
 
         # # Save relations
