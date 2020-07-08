@@ -380,8 +380,6 @@ class Model(BaseModel):
             int: The model ID of the saved model
         """
         cursor = database.cursor()
-        relations_bytes = self.relations.tobytes()
-        print("Created relations data")
 
         if model_id == None: # Can be 0 so has to use an operator
             cursor.execute(
