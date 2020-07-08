@@ -15,17 +15,17 @@ def tag_to_inttag(tag: Any) -> int:
     Returns:
         int: The integer 
     """
-    tags = [
-        wn.NOUN,
-        wn.VERB,
-        wn.ADJ,
-        wn.ADV,
-        ""
-    ]
+    tags = {
+        wn.NOUN: 0,
+        wn.VERB: 1,
+        wn.ADJ: 2,
+        wn.ADV: 3,
+        "": 4
+    }
     try:
-        return tags.index(tag)
+        return tags[tag]
     except:
-        return tags.index("")
+        return tags[""]
 
 
 def inttag_to_tag(integer: int) -> Any:
@@ -58,17 +58,17 @@ def str_to_inttag(string: str) -> int:
     Returns:
         int: [description]
     """
-    tags = [
-        "N",
-        "V",
-        "J",
-        "R",
-        ""
-    ]
+    tags = {
+        "N": 0,
+        "V": 1,
+        "J": 2,
+        "R": 3,
+        "": 4
+    }
     try:
-        return tags.index(string)
+        return tags[string]
     except:
-        return tags.index("")
+        return tags[""]
 
 def tokenize_tweet(tweet: str) -> List[str]:
     """Tokenize a tweet into words
@@ -82,18 +82,21 @@ def tokenize_tweet(tweet: str) -> List[str]:
     # NOTE: I'm not sure TweetTokenizer is actually useful here, might just change it to word tokenizer later
     tokenizer = TweetTokenizer(preserve_case=False)
     tokens = tokenizer.tokenize(tweet)
+    tags = tag_words(tokens)
+    tokens, tags = filter_important_words(tokens, tags)
 
     # Lemmatize the words
     lemmatizer = WordNetLemmatizer()
-    simple_words = [lemmatizer.lemmatize(token) for token in tokens]
+    simple_words = [lemmatizer.lemmatize(token, inttag_to_tag(tag)) for token, tag in zip(tokens,tags)]
 
-    return simple_words
+    return simple_words, tags
 
-def tag_words(words: List[str]) -> List[int]:
+def tag_words(words: List[str], default=None) -> List[int]:
     """Tag words by part of speech
 
     Args:
         words (List[str]): A list of words to tag
+        default (Any): Default value if not a noun/verb/adjective/adverb
 
     Returns:
         List[int]: A list of integer tags (or None if not tag was assigned)
@@ -108,7 +111,7 @@ def tag_words(words: List[str]) -> List[int]:
         if tag not in {'CC', 'DT', 'EX', 'IN', 'LS', 'MD', 'PDT', 'POS', 'PRP', 'PRP$', 'RP', 'TO', 'UH', 'WDT', 'WP', 'WP$', 'WRB'}:
             tags.append(str_to_inttag(tag[0]))
         else:
-            tags.append(None)
+            tags.append(default)
 
     return tags
 
@@ -125,9 +128,11 @@ def filter_important_words(words: List[str], tags: List[int]) -> Tuple[Dict[str,
     """
     filtered_words = {}
     filtered_tags = []
+
+    non_important_tag = str_to_inttag("")
     
     for word, tag in zip(words, tags):
-        if tag != None:
+        if tag != None and tag != non_important_tag:
             filtered_words[word] = len(filtered_words)
             filtered_tags.append(tag)
     

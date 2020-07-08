@@ -80,31 +80,6 @@ class BaseModel:
         """
         return self.words[word_id]
 
-    def text_probability(self, string: str) -> numpy.ndarray:
-        """Predict the (relative) probabilities for each hashtag
-
-        Args:
-            string (str): The string to predict the probabilities for
-
-        Returns:
-            numpy.ndarray: List of relative probabilities with the index of the hashtag ID
-        """
-        tokenized_tweet = tokenize_tweet(string.lower())
-        word_tags = tag_words(tokenized_tweet)
-        words_and_tags = list(zip(*filter_important_words(tokenized_tweet, word_tags)))
-
-        hashtag_probabilities = numpy.zeros(len(self.hashtags))
-        
-        for hashtag in self.hashtags:
-            text_hashtag_probability = 1
-            for word, inttag in words_and_tags:
-                text_hashtag_probability *= self.word_probability(word, inttag, hashtag)
-            
-            hashtag_probability = self.hashtag_probability(hashtag)
-            hashtag_probabilities[self._hashtags[hashtag]] = text_hashtag_probability * hashtag_probability
-
-        return hashtag_probabilities
-
     def word_probability(self, word: str, inttag: int, hashtag: str) -> int:
         """Predict the (relative) probability for a word given the hashtag
 
@@ -123,21 +98,25 @@ class BaseModel:
 
         # Counts up how many of the word appear in the bag of words for the hashtag
         # Includes similar words as partial counts
-        if tag != "":
+        '''if tag != "":
             word_synsets = wordnet.synsets(word, pos=tag)
             if len(word_synsets) != 0:
-                for training_word_id in hashtag_words:
+                for training_word_id in range(len(hashtag_words)):
                     # NOTE: This could be made more thourough at the cost of some performance in the future
-                    training_tag = inttag_to_tag(self.word_tags[training_word_id])
-                    training_synsets = wordnet.synsets(self.words[training_word_id], pos=training_tag)
-                    if len(training_synsets) != 0:
-                        similarity = wordnet.path_similarity(word_synsets[0], training_synsets[0])
-                        if similarity != None:
-                            wordcount += similarity**2
+                    if hashtag_words[training_word_id] != 0:
+                        training_tag = inttag_to_tag(self.word_tags[training_word_id])
+                        training_synsets = wordnet.synsets(self.words[training_word_id], pos=training_tag)
+                        if len(training_synsets) != 0:
+                            similarity = wordnet.path_similarity(word_synsets[0], training_synsets[0])
+                            if similarity != None:
+                                wordcount += similarity**2'''
+        for training_word_id in range(len(hashtag_words)):
+            if hashtag_words[training_word_id] != 0:
+                wordcount += word == self.words[training_word_id]
         
         probability = 1 + wordcount
-        probability /= self.hashtag_frequencies[self._hashtags[hashtag]] + len(self.words)
-
+        #probability /= self.hashtag_frequencies[self._hashtags[hashtag]] + len(self.words)
+        
         return probability
 
     def hashtag_probability(self, hashtag: str) -> int:
@@ -208,6 +187,7 @@ class Model(BaseModel):
         hashtags = {}
         hashtag_frequencies = []
         words = {}
+        word_tags = []
 
         tokenized_tweets = []
         numerized_tweets = [] # hashtag and word strings are converted into int
@@ -215,27 +195,31 @@ class Model(BaseModel):
         # Get all words
         start = time.time()
         if logging: print("Retreiving words")
-        for tweet in tweets:
-            tweet_words = tokenize_tweet(tweet[0].lower())
-            for word in tweet_words:
+        for index, tweet in enumerate(tweets):
+            if index % 100 == 0:
+                draw_progress_bar(index/len(tweets),100)
+            tweet_words, tweet_tags = tokenize_tweet(tweet[0].lower())
+            for word, tag in zip(tweet_words, tweet_tags):
                 try:
                     words[word]
                 except KeyError:
                     words[word] = len(words)
+                    word_tags.append(tag)
             tokenized_tweets.append([tweet_words, tweet[1].split(",")])
-        if logging: print(time.time()-start)
+        word_tags = numpy.array(word_tags, dtype=numpy.int16)
+        if logging: print("\n"+str(time.time()-start))
 
-        # Tag and filter
-        start = time.time()
-        if logging: print("Tagging words")
-        word_tags = tag_words(words)
-        words, word_tags = filter_important_words(words, word_tags) # Here the words list is also converted in a dictionary which is much faster
-        word_tags = numpy.array(word_tags, dtype=numpy.int32)
-        tokenized_tweets = [
-            (list(filter(lambda word : word in words, tweet[0])), tweet[1])
-            for tweet in tokenized_tweets
-        ]
-        if logging: print(time.time()-start)
+        # # Tag and filter
+        # start = time.time()
+        # if logging: print("Tagging words")
+        # word_tags = tag_words(words)
+        # words, word_tags = filter_important_words(words, word_tags) # Here the words list is also converted in a dictionary which is much faster
+        # word_tags = numpy.array(word_tags, dtype=numpy.int16)
+        # tokenized_tweets = [
+        #     (list(filter(lambda word : word in words, tweet[0])), tweet[1])
+        #     for tweet in tokenized_tweets
+        # ]
+        # if logging: print(time.time()-start)
 
         # Create hashtag data
         start = time.time()
@@ -355,7 +339,7 @@ class Model(BaseModel):
         words = {}
         for word in words_data:
             words[word[1]] = len(words)
-        word_tags = numpy.array([ word[2] for word in words_data ], dtype=numpy.int32)
+        word_tags = numpy.array([ word[2] for word in words_data ], dtype=numpy.int16)
 
         relations = numpy.zeros((len(hashtags),len(words)), dtype=numpy.int32)
         for hashtag_id, word_id, frequency in relations_data:
@@ -464,4 +448,36 @@ class Model(BaseModel):
         cursor.close()
         return model_id
 
+    def text_probability(self, string: str) -> numpy.ndarray:
+        """Predict the (relative) probabilities for each hashtag
 
+        Args:
+            string (str): The string to predict the probabilities for
+
+        Returns:
+            numpy.ndarray: List of relative probabilities with the index of the hashtag ID
+        """
+        words, _ = tokenize_tweet(string.lower())
+
+        words_in_text = []
+        
+        for word in words:
+            try:
+                word_id = self._words[word]
+                words_in_text.append(word_id)
+            except KeyError:
+                pass
+        
+        text_relations = self.relations[:,words_in_text]
+        hashtag_probabilities = text_relations.sum(axis=1)
+
+        # for hashtag in self.hashtags:
+        #     text_hashtag_probability = 1
+        #     for word, inttag in words_and_tags:
+        #         text_hashtag_probability *= self.word_probability(word, inttag, hashtag)
+        #         count += 1
+            
+        #     hashtag_probability = self.hashtag_probability(hashtag)
+        #     hashtag_probabilities[self._hashtags[hashtag]] = text_hashtag_probability# * hashtag_probability
+
+        return hashtag_probabilities
