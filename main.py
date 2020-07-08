@@ -12,7 +12,8 @@ database = mysql.connector.connect(
     host="db",
     user="TweetHashtagAssigner",
     password="password",
-    database="TweetHashtagAssigner"
+    database="TweetHashtagAssigner",
+    use_pure=True
 )
 app = Flask(__name__)
 print("Loading model")
