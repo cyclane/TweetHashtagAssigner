@@ -318,11 +318,13 @@ class Model(BaseModel):
             f"SELECT * FROM hashtags_{model_id} ORDER BY id ASC"
         )
         hashtags_data = cursor.fetchall()
+        print("Hashtags data fetched")
 
         hashtags = {}
         for hashtag in hashtags_data:
             hashtags[hashtag[1]] = len(hashtags)
         hashtag_frequencies = numpy.array([ hashtag[2] for hashtag in hashtags_data ], dtype=numpy.int32)
+        print("Hashtags data created")
 
         del hashtags_data
 
@@ -331,11 +333,13 @@ class Model(BaseModel):
             f"SELECT * FROM words_{model_id} ORDER BY id ASC"
         )
         words_data = cursor.fetchall()
+        print("Words data fetched")
 
         words = {}
         for word in words_data:
             words[word[1]] = len(words)
         word_tags = numpy.array([ word[2] for word in words_data ], dtype=numpy.int16)
+        print("Words data created")
 
         del words_data
 
