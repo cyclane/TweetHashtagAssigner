@@ -271,7 +271,7 @@ class Model(BaseModel):
         # Create relations data
         start = time.time()
         if logging: print("Creating relations data")
-        relations = numpy.zeros((len(hashtags),len(words)), dtype=numpy.int32)
+        relations = numpy.zeros((len(hashtags),len(words)), dtype=numpy.int16)
         for index in range(len(numerized_tweets)):
             for word_index in range(len(numerized_tweets[index][0])):
                 for hashtag_index in range(len(numerized_tweets[index][1])):
@@ -341,7 +341,7 @@ class Model(BaseModel):
             words[word[1]] = len(words)
         word_tags = numpy.array([ word[2] for word in words_data ], dtype=numpy.int16)
 
-        relations = numpy.zeros((len(hashtags),len(words)), dtype=numpy.int32)
+        relations = numpy.zeros((len(hashtags),len(words)), dtype=numpy.int16)
         for hashtag_id, word_id, frequency in relations_data:
             relations[hashtag_id][word_id] = frequency
 
