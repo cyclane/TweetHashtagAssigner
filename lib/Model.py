@@ -417,7 +417,7 @@ class Model(BaseModel):
         """)
         cursor.execute(f"TRUNCATE TABLE words_{model_id}")
         cursor.execute(f"""
-        CREATE TABLE relations_{model_id} (
+        CREATE TABLE IF NOT EXISTS relations_{model_id} (
             hashtag_id MEDIUMINT UNSIGNED NOT NULL,
             words BLOB NOT NULL,
             PRIMARY KEY (hashtag_id)
