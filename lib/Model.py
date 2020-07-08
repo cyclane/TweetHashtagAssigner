@@ -396,8 +396,9 @@ class Model(BaseModel):
                 tweet_count=%s
                 """,
                 (model_id, self.tweet_count, relations_bytes, self.tweet_count)
-            ) 
+            )
         database.commit()
+        del relations_bytes
         if model_id == None:
             model_id = cursor.lastrowid
         
