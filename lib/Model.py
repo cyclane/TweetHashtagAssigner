@@ -351,6 +351,7 @@ class Model(BaseModel):
         relations = None
         print("Relations table created")
         count = 0
+        num_words = len(words)
         while True:
             print(f"{count} relations rows loaded")
             rows = cursor.fetchmany(batch_size)
@@ -365,7 +366,7 @@ class Model(BaseModel):
                         ),
                         dtype=numpy.int16
                     ),
-                    (len(rows), relations.shape[1])
+                    (len(rows), num_words)
                 )
                 if relations != None:
                     relations = numpy.vstack((relations, batch))
