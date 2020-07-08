@@ -357,7 +357,7 @@ class Model(BaseModel):
             model_id=model_id
         )
 
-    def save(self, database: mysql.connector.MySQLConnection, batch_size:int, model_id: int = None) -> int:
+    def save(self, database: mysql.connector.MySQLConnection, model_id: int = None) -> int:
         """Save the model to a MySQL databse
 
         Args:
