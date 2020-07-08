@@ -344,10 +344,13 @@ class Model(BaseModel):
             f"SELECT * FROM relations_{model_id} ORDER BY hashtag_id ASC"
         )
         relations = numpy.zeros((len(hashtags),len(words)), dtype=numpy.int16)
+        count = 0
         while True:
+            print(f"{count} relations rows loaded")
             rows = cursor.fetchmany(batch_size)
             for hashtag_id, array_bytes in rows:
                 relations[hashtag_id] = numpy.frombuffer(array_bytes, dtype=numpy.int16)
+                count += 1
 
         cursor.close()
         
