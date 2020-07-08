@@ -352,13 +352,25 @@ class Model(BaseModel):
         print("Relations table created")
         count = 0
         while True:
-            print(f"{count} relations rows loaded\nrelations size: {relations.nbytes}")
+            print(f"{count} relations rows loaded")
             rows = cursor.fetchmany(batch_size)
             if rows:
-                for hashtag_id, array_bytes in rows:
-                    # Rarelly array_bytes is a bytearray instead of a string, I have not managed to find the cause of this randomness
-                    relations[hashtag_id] = numpy.frombuffer(array_bytes.encode() if type(array_bytes) == str else array_bytes, dtype=numpy.int16)
-                    count += 1
+                batch = numpy.resize(
+                    numpy.frombuffer(
+                        b"".join(
+                            [
+                                array_bytes.encode() if type(array_bytes) == str else array_bytes
+                                for _, array_bytes in rows
+                            ]
+                        ),
+                        dtype=numpy.int16
+                    ),
+                    (batch_size, relations.shape[1])
+                )
+                if relations:
+                    relations = numpy.vstack((relations, batch))
+                else:
+                    relations = batch
             else:
                 break
 
