@@ -17,7 +17,7 @@ database = mysql.connector.connect(
 )
 app = Flask(__name__)
 print("Loading model")
-model = lib.Model.load(database, 5, 1)
+model = lib.Model.load(database, 10, 1)
 print("Model loaded")
 
 @app.route('/api/probability')
