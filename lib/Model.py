@@ -348,7 +348,7 @@ class Model(BaseModel):
             f"SELECT * FROM relations_{model_id} ORDER BY hashtag_id ASC"
         )
         print("Query for relations executed")
-        relations = numpy.zeros((len(hashtags),len(words)), dtype=numpy.int16)
+        relations = None
         print("Relations table created")
         count = 0
         while True:
@@ -365,12 +365,13 @@ class Model(BaseModel):
                         ),
                         dtype=numpy.int16
                     ),
-                    (batch_size, relations.shape[1])
+                    (len(rows), relations.shape[1])
                 )
-                if relations:
+                if relations != None:
                     relations = numpy.vstack((relations, batch))
                 else:
                     relations = batch
+                count += len(rows)
             else:
                 break
 
