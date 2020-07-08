@@ -347,7 +347,9 @@ class Model(BaseModel):
         cursor.execute(
             f"SELECT * FROM relations_{model_id} ORDER BY hashtag_id ASC"
         )
+        print("Query for relations executed")
         relations = numpy.zeros((len(hashtags),len(words)), dtype=numpy.int16)
+        print("Relations table created")
         count = 0
         while True:
             print(f"{count} relations rows loaded")
