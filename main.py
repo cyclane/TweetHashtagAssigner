@@ -15,7 +15,9 @@ database = mysql.connector.connect(
     database="TweetHashtagAssigner"
 )
 app = Flask(__name__)
-model = lib.Model.load(database,1)
+print("Loading model")
+model = lib.Model.load(database, 5, 1)
+print("Model loaded")
 
 @app.route('/api/probability')
 def main():

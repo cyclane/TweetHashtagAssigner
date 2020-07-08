@@ -293,11 +293,12 @@ class Model(BaseModel):
         )
 
     @classmethod
-    def load(cls, database: mysql.connector.MySQLConnection, model_id: int) -> Model:
+    def load(cls, database: mysql.connector.MySQLConnection, batch_size: int, model_id: int) -> Model:
         """Load a model from a MySQL database
 
         Args:
             database (mysql.connector.MySQLConnection): The MySQL database connection to use
+            batch_size (int): Batch size for relations
             model_id (int): ID of the model to load
 
         Returns:
@@ -307,14 +308,10 @@ class Model(BaseModel):
 
         # Fetch model tweet count
         cursor.execute(
-            "SELECT tweet_count, relations FROM models WHERE id=%s",
+            "SELECT tweet_count FROM models WHERE id=%s",
             (model_id,)
         )
-        model_data = cursor.fetchall()[0]
-        tweet_count = model_data[0]
-        relations = numpy.frombuffer(model_data[1], dtype=numpy.int16)
-
-        del model_data
+        tweet_count = cursor.fetchall()[0][0]
 
         # Fetch hashtags and hashtag frequencies
         cursor.execute(
@@ -342,21 +339,17 @@ class Model(BaseModel):
 
         del words_data
 
-        # # Fetch relations
-        # cursor.execute(
-        #     f"SELECT * FROM relations_{model_id} ORDER BY hashtag_id ASC, word_id ASC"
-        # )
-        # relations_data = cursor.fetchall()
-
-        # Convert data into correct types
-
-        # relations = numpy.zeros((len(hashtags),len(words)), dtype=numpy.int16)
-        # for hashtag_id, word_id, frequency in relations_data:
-        #     relations[hashtag_id][word_id] = frequency
+        # Fetch relations
+        cursor.execute(
+            f"SELECT * FROM relations_{model_id} ORDER BY hashtag_id ASC"
+        )
+        relations = numpy.zeros((len(hashtags),len(words)), dtype=numpy.int16)
+        while True:
+            rows = cursor.fetchmany(batch_size)
+            for hashtag_id, array_bytes in rows:
+                relations[hashtag_id] = numpy.frombuffer(array_bytes, dtype=numpy.int16)
 
         cursor.close()
-
-        relations.resize((len(hashtags), len(words)))
         
         return Model(
             tweet_count=tweet_count,
