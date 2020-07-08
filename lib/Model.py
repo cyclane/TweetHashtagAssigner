@@ -419,7 +419,7 @@ class Model(BaseModel):
         cursor.execute(f"""
         CREATE TABLE IF NOT EXISTS relations_{model_id} (
             hashtag_id MEDIUMINT UNSIGNED NOT NULL,
-            words BLOB NOT NULL,
+            words MEDIUMBLOB NOT NULL,
             PRIMARY KEY (hashtag_id)
         );
         """)
