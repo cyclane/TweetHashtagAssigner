@@ -354,8 +354,8 @@ class Model(BaseModel):
         while True:
             print(f"{count} relations rows loaded")
             rows = cursor.fetchmany(batch_size)
+            print(rows)
             for hashtag_id, array_bytes in rows:
-                print(type(array_bytes))
                 relations[hashtag_id] = numpy.frombuffer(array_bytes.encode(), dtype=numpy.int16)
                 count += 1
 
