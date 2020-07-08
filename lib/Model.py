@@ -357,11 +357,12 @@ class Model(BaseModel):
             model_id=model_id
         )
 
-    def save(self, database: mysql.connector.MySQLConnection, model_id: int = None) -> int:
+    def save(self, database: mysql.connector.MySQLConnection, batch_size:int, model_id: int = None) -> int:
         """Save the model to a MySQL databse
 
         Args:
             database (mysql.connector.MySQLConnection): The MySQL database connection to use
+            batch_size (int): The batch size for inserting relations
             model_id (int, optional): The model ID to use (overwrites if the model ID already exists). If None then AUTO_INCREMENT is used. Defaults to None.
 
         Returns:
@@ -423,6 +424,7 @@ class Model(BaseModel):
                 (hashtag, int(self.hashtag_frequencies[index]))
             )
         database.commit()
+        print("Hashtags data saved")
 
         # Save words and word tags
         for index, word in enumerate(self._words):
@@ -433,17 +435,19 @@ class Model(BaseModel):
                 (word, int(self.word_tags[index]))
             )
         database.commit()
+        print("Words data saved")
 
         # Save relations
-        for (hashtag_id, word_id), frequency in numpy.ndenumerate(self.relations):
-            if frequency: # Don't save values of 0 frequency
-                cursor.execute(
-                    f"""
-                    INSERT INTO relations_{model_id} (hashtag_id, word_id, frequency) VALUES (%s, %s, %s)
-                    """,
-                    (hashtag_id, word_id, int(frequency))
-                )
+        data = [ (hashtag_id, word_id, frequency) for (hashtag_id, word_id), frequency in numpy.ndenumerate(self.relations) if frequency != 0]
+        print("Created relations data")
+        cursor.executemany(
+            f"""
+            INSERT INTO relations_{model_id} (hashtag_id, word_id, frequency) VALUES (%s, %s, %s)
+            """,
+            data
+        )
         database.commit()
+        print("Relations data saved")
 
         cursor.close()
         return model_id
