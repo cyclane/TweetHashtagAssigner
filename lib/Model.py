@@ -454,7 +454,10 @@ class Model(BaseModel):
                 yield (hashtag_id, relations[hashtag_id].tobytes())
         complete = False
         generator = _relations_iterator(self.relations)
+        count = 0
         while not complete:
+            count += 1
+            print(f"Iteration {count}")
             data = []
             try:
                 for x in range(batch_size):
