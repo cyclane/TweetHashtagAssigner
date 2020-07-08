@@ -90,7 +90,8 @@ if __name__ == "__main__":
     )
 
     counter = Counter()
-    streamListener = StreamListener(database.cursor(),logging=args.logging)
+    cursor = database.cursor()
+    streamListener = StreamListener(cursor,logging=args.logging)
     start = time.time()
 
     try:
@@ -105,6 +106,8 @@ if __name__ == "__main__":
         if args.logging: print(f"\nScript errored!\n\n{e}")
     end = time.time()
     database.commit()
+    cursor.close()
+    database.disconnect()
 
     if args.logging:
         print("Total time (s):",end-start)
