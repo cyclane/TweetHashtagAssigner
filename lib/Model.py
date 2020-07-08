@@ -357,8 +357,7 @@ class Model(BaseModel):
             if rows:
                 for hashtag_id, array_bytes in rows:
                     # Rarelly array_bytes is a bytearray instead of a string, I have not managed to find the cause of this randomness
-                    for index, n in enumerate(numpy.frombuffer(array_bytes.encode() if type(array_bytes) == str else array_bytes, dtype=numpy.int16)):
-                        relations[hashtag_id][index] += n
+                    relations[hashtag_id] += numpy.frombuffer(array_bytes.encode() if type(array_bytes) == str else array_bytes, dtype=numpy.int16)
                     count += 1
             else:
                 break
