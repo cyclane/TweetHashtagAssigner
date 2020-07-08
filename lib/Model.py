@@ -307,10 +307,14 @@ class Model(BaseModel):
 
         # Fetch model tweet count
         cursor.execute(
-            "SELECT tweet_count FROM models WHERE id=%s",
+            "SELECT tweet_count, relations FROM models WHERE id=%s",
             (model_id,)
         )
-        tweet_count = cursor.fetchall()[0][0]
+        model_data = cursor.fetchall()[0]
+        tweet_count = model_data[0]
+        relations = numpy.frombuffer(model_data[1], dtype=numpy.int16)
+
+        del model_data
 
         # Fetch hashtags and hashtag frequencies
         cursor.execute(
@@ -318,34 +322,41 @@ class Model(BaseModel):
         )
         hashtags_data = cursor.fetchall()
 
+        hashtags = {}
+        for hashtag in hashtags_data:
+            hashtags[hashtag[1]] = len(hashtags)
+        hashtag_frequencies = numpy.array([ hashtag[2] for hashtag in hashtags_data ], dtype=numpy.int32)
+
+        del hashtags_data
+
         # Fetch words and word tags
         cursor.execute(
             f"SELECT * FROM words_{model_id} ORDER BY id ASC"
         )
         words_data = cursor.fetchall()
 
-        # Fetch relations
-        cursor.execute(
-            f"SELECT * FROM relations_{model_id} ORDER BY hashtag_id ASC, word_id ASC"
-        )
-        relations_data = cursor.fetchall()
-
-        # Convert data into correct types
-        hashtags = {}
-        for hashtag in hashtags_data:
-            hashtags[hashtag[1]] = len(hashtags)
-        hashtag_frequencies = numpy.array([ hashtag[2] for hashtag in hashtags_data ], dtype=numpy.int32)
-        
         words = {}
         for word in words_data:
             words[word[1]] = len(words)
         word_tags = numpy.array([ word[2] for word in words_data ], dtype=numpy.int16)
 
-        relations = numpy.zeros((len(hashtags),len(words)), dtype=numpy.int16)
-        for hashtag_id, word_id, frequency in relations_data:
-            relations[hashtag_id][word_id] = frequency
+        del words_data
+
+        # # Fetch relations
+        # cursor.execute(
+        #     f"SELECT * FROM relations_{model_id} ORDER BY hashtag_id ASC, word_id ASC"
+        # )
+        # relations_data = cursor.fetchall()
+
+        # Convert data into correct types
+
+        # relations = numpy.zeros((len(hashtags),len(words)), dtype=numpy.int16)
+        # for hashtag_id, word_id, frequency in relations_data:
+        #     relations[hashtag_id][word_id] = frequency
 
         cursor.close()
+
+        relations.resize((len(hashtags), len(words)))
         
         return Model(
             tweet_count=tweet_count,
@@ -369,19 +380,22 @@ class Model(BaseModel):
             int: The model ID of the saved model
         """
         cursor = database.cursor()
+        relations_bytes = self.relations.tobytes()
+        print("Created relations data")
+
         if model_id == None: # Can be 0 so has to use an operator
             cursor.execute(
-                "INSERT INTO models (tweet_count) VALUES (%s)",
-                (self.tweet_count,)
+                "INSERT INTO models (tweet_count, relations) VALUES (%s, %s)",
+                (self.tweet_count, relations_bytes)
             )
         else:
             cursor.execute(
                 """
-                INSERT INTO models (id, tweet_count) VALUES (%s, %s)
+                INSERT INTO models (id, relations, tweet_count) VALUES (%s, %s, %s)
                 ON DUPLICATE KEY UPDATE
                 tweet_count=%s
                 """,
-                (model_id, self.tweet_count, self.tweet_count)
+                (model_id, self.tweet_count, relations_bytes, self.tweet_count)
             ) 
         database.commit()
         if model_id == None:
@@ -404,15 +418,15 @@ class Model(BaseModel):
         ) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;
         """)
         cursor.execute(f"TRUNCATE TABLE words_{model_id}")
-        cursor.execute(f"""
-        CREATE TABLE IF NOT EXISTS relations_{model_id} (
-            hashtag_id MEDIUMINT UNSIGNED NOT NULL,
-            word_id MEDIUMINT UNSIGNED NOT NULL,
-            frequency MEDIUMINT UNSIGNED NOT NULL,
-            PRIMARY KEY (hashtag_id, word_id)
-        );
-        """)
-        cursor.execute(f"TRUNCATE TABLE relations_{model_id}")
+        # cursor.execute(f"""
+        # CREATE TABLE IF NOT EXISTS relations_{model_id} (
+        #     hashtag_id MEDIUMINT UNSIGNED NOT NULL,
+        #     word_id MEDIUMINT UNSIGNED NOT NULL,
+        #     frequency MEDIUMINT UNSIGNED NOT NULL,
+        #     PRIMARY KEY (hashtag_id, word_id)
+        # );
+        # """)
+        # cursor.execute(f"TRUNCATE TABLE relations_{model_id}")
         database.commit()
 
         # Save hashtags and hashtag frequencies
@@ -437,17 +451,17 @@ class Model(BaseModel):
         database.commit()
         print("Words data saved")
 
-        # Save relations
-        data = [ (hashtag_id, word_id, frequency) for (hashtag_id, word_id), frequency in numpy.ndenumerate(self.relations) if frequency != 0]
-        print("Created relations data")
-        cursor.executemany(
-            f"""
-            INSERT INTO relations_{model_id} (hashtag_id, word_id, frequency) VALUES (%s, %s, %s)
-            """,
-            data
-        )
-        database.commit()
-        print("Relations data saved")
+        # # Save relations
+        # data = [ (hashtag_id, word_id, frequency) for (hashtag_id, word_id), frequency in numpy.ndenumerate(self.relations) if frequency != 0]
+        # print("Created relations data")
+        # cursor.executemany(
+        #     f"""
+        #     INSERT INTO relations_{model_id} (hashtag_id, word_id, frequency) VALUES (%s, %s, %s)
+        #     """,
+        #     data
+        # )
+        # database.commit()
+        # print("Relations data saved")
 
         cursor.close()
         return model_id
