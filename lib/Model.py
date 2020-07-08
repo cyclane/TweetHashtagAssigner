@@ -348,31 +348,21 @@ class Model(BaseModel):
             f"SELECT * FROM relations_{model_id} ORDER BY hashtag_id ASC"
         )
         print("Query for relations executed")
-        relations = []
+        relations = numpy.zeros((len(hashtags),len(words)), dtype=numpy.int16)
         print("Relations table created")
         count = 0
-        num_words = len(words)
         while True:
             print(f"{count} relations rows loaded")
             rows = cursor.fetchmany(batch_size)
             if rows:
-                batch = numpy.resize(
-                    numpy.frombuffer(
-                        b"".join(
-                            [
-                                array_bytes.encode() if type(array_bytes) == str else array_bytes
-                                for _, array_bytes in rows
-                            ]
-                        ),
-                        dtype=numpy.int16
-                    ),
-                    (len(rows), num_words)
-                )
-                relations.append(batch)
-                count += len(rows)
+                for hashtag_id, array_bytes in rows:
+                    # Rarelly array_bytes is a bytearray instead of a string, I have not managed to find the cause of this randomness
+                    for index, n in enumerate(numpy.frombuffer(array_bytes.encode() if type(array_bytes) == str else array_bytes, dtype=numpy.int16)):
+                        relations[hashtag_id][index] += n
+                    count += 1
             else:
                 break
-        relations = numpy.vstack(relations)
+
         cursor.close()
         
         return Model(
