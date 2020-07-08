@@ -385,20 +385,19 @@ class Model(BaseModel):
 
         if model_id == None: # Can be 0 so has to use an operator
             cursor.execute(
-                "INSERT INTO models (tweet_count, relations) VALUES (%s, %s)",
-                (self.tweet_count, relations_bytes)
+                "INSERT INTO models (tweet_count) VALUES (%s)",
+                (self.tweet_count,)
             )
         else:
             cursor.execute(
                 """
-                INSERT INTO models (id, relations, tweet_count) VALUES (%s, %s, %s)
+                INSERT INTO models (id, tweet_count) VALUES (%s, %s)
                 ON DUPLICATE KEY UPDATE
                 tweet_count=%s
                 """,
-                (model_id, self.tweet_count, relations_bytes, self.tweet_count)
+                (model_id, self.tweet_count, self.tweet_count)
             )
         database.commit()
-        del relations_bytes
         if model_id == None:
             model_id = cursor.lastrowid
         
@@ -419,15 +418,14 @@ class Model(BaseModel):
         ) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;
         """)
         cursor.execute(f"TRUNCATE TABLE words_{model_id}")
-        # cursor.execute(f"""
-        # CREATE TABLE IF NOT EXISTS relations_{model_id} (
-        #     hashtag_id MEDIUMINT UNSIGNED NOT NULL,
-        #     word_id MEDIUMINT UNSIGNED NOT NULL,
-        #     frequency MEDIUMINT UNSIGNED NOT NULL,
-        #     PRIMARY KEY (hashtag_id, word_id)
-        # );
-        # """)
-        # cursor.execute(f"TRUNCATE TABLE relations_{model_id}")
+        cursor.execute(f"""
+        CREATE TABLE relations_{model_id} (
+            hashtag_id MEDIUMINT UNSIGNED NOT NULL,
+            words BLOB NOT NULL,
+            PRIMARY KEY (hashtag_id)
+        );
+        """)
+        cursor.execute(f"TRUNCATE TABLE relations_{model_id}")
         database.commit()
 
         # Save hashtags and hashtag frequencies
@@ -451,6 +449,18 @@ class Model(BaseModel):
             )
         database.commit()
         print("Words data saved")
+
+        # Save relations
+        def _relations_iterator(relations):
+            for hashtag_id in range(len(relations)):
+                yield (hashtag_id, relations[hashtag_id].tobytes())
+        cursor.executemany(
+            f"""
+            INSERT INTO relations_{model_id} (hashtag_id, words) VALUES (%s, %s)
+            """,
+            _relations_iterator(self.relations)
+        )
+        database.commit()
 
         # # Save relations
         # data = [ (hashtag_id, word_id, frequency) for (hashtag_id, word_id), frequency in numpy.ndenumerate(self.relations) if frequency != 0]
