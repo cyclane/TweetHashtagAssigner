@@ -1,3 +1,4 @@
 # TweetHashtagAssigner
-This should be made a bit more formal but for the moment:
-download_tweets.py -> format_tweets.py -> process_tweets.py -> web app
+**By @Gleb-ko @ekeenan3 and @Lex-py**
+- This is a web app that you can run with Docker using the docker-compose.yml file.
+- All login details to the database are placeholders that should be replaced.
